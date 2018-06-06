@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>stuf</title>
+	<style>
+		body {
+			background: #000;
+		}
+		h2 {
+			color: white;
+			position: absolute;
+			right: 0;
+		}
+		.x {
+			top: 0;
+		}
+		.y {
+			top: 30px;
+		}
+		.grid {
+			display: block;
+			height: 20px;
+			width: 20px;
+			border: 1px solid gray;
+			position: absolute;
+			top: auto;
+			left: auto;
+			right: auto;
+			bottom: auto;
+		}
+		.block {
+			display: block;
+			height: 20px;
+			width: 20px;
+			background: yellow;
+			border: 1px solid transparent;
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: auto;
+			bottom: auto;
+		}
+	</style>
+</head>
+<body>
+	<!-- <span class="grid"></span> -->
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+
+<script>
+	const gridSize = 20;
+	const gridWidth = 11
+	const gridHeight = 30;
+	const grid = [];
+
+	const block = [];
+	let currentBlock = -1;
+
+	const piece = [];
+	let currentPiece = -1;
+	const pieceType = [
+		{
+			name: "pieceI",
+			x: [[3,4,5,6], [0,0,0,0], [0,0,0,0], [0,0,0,0]],
+			y: [[0,0,0,0], [0,0,0,0], [0,0,0,0], [0,0,0,0]]
+		},
+		{	
+			name: "pieceO",
+			x: [[3,4,3,4], [0,0,0,0], [0,0,0,0], [0,0,0,0]],
+			y: [[0,0,1,1], [0,0,0,0], [0,0,0,0], [0,0,0,0]]
+		},
+		{	
+			name: "pieceL",
+			x: [[3,4,5,5], [0,0,0,0], [0,0,0,0], [0,0,0,0]],
+			y: [[1,1,1,2], [0,0,0,0], [0,0,0,0], [0,0,0,0]]
+		},
+		{	
+			name: "pieceJ",
+			x: [[3,3,4,5], [4,4,4,5], [3,4,5,5], [3,4,4,4]], 
+			y: [[0,1,1,1], [0,1,2,0], [0,0,0,1], [2,0,1,2]]
+		},
+		{	
+			name: "pieceS",
+			x: [[3,4,4,5], [0,0,0,0], [0,0,0,0], [0,0,0,0]],
+			y: [[1,0,1,0], [0,0,0,0], [0,0,0,0], [0,0,0,0]]
+		},
+		{	
+			name: "pieceZ",
+			x: [[3,4,4,5], [0,0,0,0], [0,0,0,0], [0,0,0,0]],
+			y: [[0,1,0,1], [0,0,0,0], [0,0,0,0], [0,0,0,0]]
+		},
+		{	
+			name: "pieceT",
+			x: [[3,4,4,5], [0,0,0,0], [0,0,0,0], [0,0,0,0]],
+			y: [[1,0,1,1], [0,0,0,0], [0,0,0,0], [0,0,0,0]]
+		}
+	];
+	let random;
+	let state = 0; // For rotation states 0 - 3
+	let rotate = false;
+	let yAtRotate = 0;
+
+	let timeDelay = 1000;
+	let timeOut = window.setInterval(startTimer, timeDelay);
+
+	const generateGrid = () => {
+		const gridArea = gridHeight * gridWidth;
+
+		let row = 0;
+		let col = 0;
+
+		for (let i = 0; i < gridArea; i++) {
+			let eachGrid = {};
+			eachGrid.x = col;
+			eachGrid.y = row;
+			
+			grid[i] = eachGrid;
+
+			$("body").append(`<span class="grid grid${i}"></span>`);
+			$(`.grid${i}`).css("left", col * gridSize);
+			$(`.grid${i}`).css("top", row * gridSize);
+
+			col++;
+
+			if (col === gridWidth) {
+				col = 0;
+				row++;
+			}
+		}
+		$(".grid").css("height", gridSize);
+		$(".grid").css("width", gridSize);
+	}
+	const randomizer = () => {
+		const randomNum = Math.floor(Math.random() * 7);
+		return randomNum;
+	}
+	const generatePiece = () => {
+		random = randomizer();
+
+		if (state === 4) {
+			state = 0;
+		}
+		// console.log(`${piece[3].name} x:${piece[3].x} y:${piece[3].y}`);
+
+		if (rotate === false) {
+			currentPiece++; // Initialize piece
+		}
+		piece.push([]);
+
+		for (let i = 0; i < 4; i++) {
+			let x = pieceType[3].x[state][i];
+			let y = pieceType[3].y[state][i] + yAtRotate;
+			// console.log(pieceType[random])
+			if (rotate === true) {
+				currentBlock--;
+			} else {
+				currentBlock++;
+			}
+
+			generateBlock(x, y);
+			piece[currentPiece].push(block[currentBlock]);
+		}
+	}
+	const generateBlock = (xPos, yPos) => {
+		// console.log("generate new block");
+		let eachBlock = {};
+		eachBlock.x = xPos;
+		eachBlock.y = yPos;
+
+		block[currentBlock] = eachBlock;
+
+		$("body").append(`<span class="block block${currentBlock}"></span>`);
+
+		$(`.block${currentBlock}`).css("left", eachBlock.x * gridSize);
+		$(`.block${currentBlock}`).css("top", eachBlock.y * gridSize);
+
+		$(".block").css("height", gridSize);
+		$(".block").css("width", gridSize);
+	}
+
+	function startTimer() {
+		gravity();
+	}
+	const gravity = () => {
+		// console.log(currentBlock, block);
+		if (stopBlock()) {
+			generatePiece();
+			console.log(currentPiece);
+		 } else {
+			for (let i = 0; i < 4; i++) {
+				let index = currentBlock - i;
+				block[index].y++;			
+				$(`.block${index}`).css("top", block[index].y * gridSize); // Draws block
+			}
+		}
+	}
+	const stopBlock = () => {
+		// if block is touching a block underneath it stop or bototm reached
+		for (let i = 0; i < 4; i++) {
+			// Check 4 current blocks against all previous blocks
+			// Stops if there is a block below it
+			for (let j = 0; j < currentBlock - 4; j++) {
+				if (piece[currentPiece][i].y === block[j].y - 1 &&
+					piece[currentPiece][i].x === block[j].x) {
+					// console.log("Stop!");
+					return true;
+				}
+			}
+			if (piece[currentPiece][i].y === gridHeight - 1) {
+				// console.log("STOP!");
+				return true;
+			}
+		}
+	}
+
+	const checkBounds = (keySide) => {
+		let boundCount = 0;
+		// if block is touching a block underneath it stop or bototm reached
+		for (let i = 0; i < 4; i++) {
+			// Check 4 current blocks against all previous blocks
+			// Stops if there is a block beside it
+			for (let j = 0; j < currentBlock - 4; j++) {
+				if (piece[currentPiece][i].x === block[j].x - 1 || 
+					piece[currentPiece][i].x === block[j].x + 1) {
+					if (piece[currentPiece][i].y === block[j].y) {
+						console.log("Bump!");
+						return true;
+						
+					}
+				}
+			}
+			// Checks if block is touching right boundary
+			// console.log(`Current ${i} x:${piece[currentPiece][i].x}`)
+
+			if (keySide === "right" &&
+				piece[currentPiece][i].x === gridWidth-1) {
+				return true;
+				console.log("Bump! right");				
+			} else if (keySide === "left" && 
+				piece[currentPiece][i].x === 0){
+				console.log("Bump! left");		
+				return true;
+			}
+		}
+	}
+
+	const rotatePiece = () => {
+		// Change current 4 blocks to new state positions
+		
+		let mostRight = findMostRightBlock(); 
+		
+		let yShift = findLowestBlock();
+		let xShift = 0;
+		let xIncr = -3;
+
+		// console.log(block[currentBlock].x)
+
+		if (mostRight === 10) {
+			xShift = 5;
+		} else if (mostRight === 9) {
+			xShift = 4;
+		} else if (mostRight === 8) {
+			xShift = 3;
+		} else if (mostRight === 7) {
+			xShift = 2;
+		} else if (mostRight === 6) {
+			xShift = 1;
+		} else if (mostRight === 5) {
+			xShift = 0;
+		} else if (mostRight === 4) {
+			xShift = -1;
+		} else if (mostRight === 3) {
+			xShift = -2;
+		} else if (mostRight === 2) {
+			xShift = -3;
+		}
+
+
+
+		if (state > 3) {
+			state = 0;
+		}
+		for (let i = 0; i < 4; i++) {
+			// Access current blocks
+			let index = currentBlock - i;
+			
+			
+			// console.log(pieceType[3].x[state][i]);
+			block[index].x = pieceType[3].x[state][i] + xShift;
+			block[index].y = pieceType[3].y[state][i] + yShift;
+
+			// console.log(`${pieceType[3].y[state][i]} + ${yShift} = ${block[index].y}`);
+
+			$(`.block${index}`).css("left", block[index].x * gridSize);
+			$(`.block${index}`).css("top", block[index].y * gridSize);
+		}
+
+	}
+
+	const movement = () => {
+		let count = 0;
+
+		$(document).keypress();
+		$(document).keyup();
+
+		$(document).on("keyup keypress", function(e) {
+			if (e.type === "keyup" && e.key === "s") {
+				count = 0;
+				clearInterval(timeOut);
+				timeDelay = 1000;
+				timeOut = window.setInterval(startTimer, timeDelay);
+				
+			  } else if (e.type === "keypress") {
+				  	if (e.key === "d") {
+				  		// If d is pressed check all blocks are within bounds THEN move
+				  		if (checkBounds("right")) {
+
+				  		} else {
+				  			// Move all blocks of current piece right
+				  			for (let i = 0; i < 4; i++) {
+				  				let index = currentBlock - i;
+						  		block[index].x ++;
+						  		$(`.block${index}`).css("left", block[index].x * gridSize);
+				  			}
+				  		}
+				  		// console.log(`block #${i} x:${block[i].x}`);
+				  	} else if (e.key === "a") {
+		  		  		if (checkBounds("left")) {
+
+		  		  		} else {
+		  		  			// Move all blocks of current piece right
+		  		  			for (let i = 0; i < 4; i++) {
+		  		  				let index = currentBlock - i;
+		  				  		block[index].x --;
+		  				  		$(`.block${index}`).css("left", block[index].x * gridSize);
+		  		  			}
+		  		  		}
+				  		
+				  	}
+				if (e.key === "s") {
+					if (count === 0) {
+						clearInterval(timeOut);
+						timeDelay = 30;
+						timeOut = window.setInterval(startTimer, timeDelay);
+					}
+					count++;
+				}
+
+				if (e.key === "w") {
+					state++;
+					rotatePiece();
+				}
+
+				if (e.key === "q") {
+					clearInterval(timeOut);
+				}
+			}
+		});
+	}
+
+	const findLowestBlock = () => {
+		let greatestY = 0;
+		for (let i = 0; i < 4; i++) {
+			let index = currentBlock - 3 + i;
+			
+			if (block[index].y > greatestY) {
+				greatestY = block[index].y;
+			}
+		}
+		return greatestY - 1;
+	}
+	const findMostRightBlock = () => {
+		let mostRight = -1;
+		for (let i = 0; i < 4; i++) {
+			let index = currentBlock - i;
+			if (block[index].x > mostRight) {
+				mostRight = block[index].x;
+				console.log(block[index], block[index].x);
+			}
+		}
+		return mostRight;
+	}
+
+	generateGrid();
+	generatePiece();
+	movement();
+	
+
+</script>
+
+</html>
