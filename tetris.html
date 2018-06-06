@@ -62,18 +62,18 @@
 	const pieceType = [
 		{
 			name: "pieceI",
-			x: [[3,4,5,6], [0,0,0,0], [0,0,0,0], [0,0,0,0]],
-			y: [[0,0,0,0], [0,0,0,0], [0,0,0,0], [0,0,0,0]]
+			x: [[3,4,5,6], [5,5,5,5], [3,4,5,6], [3,3,3,3]],
+			y: [[0,0,0,0], [0,1,2,3], [0,0,0,0], [0,1,2,3]]
 		},
 		{	
 			name: "pieceO",
-			x: [[3,4,3,4], [0,0,0,0], [0,0,0,0], [0,0,0,0]],
-			y: [[0,0,1,1], [0,0,0,0], [0,0,0,0], [0,0,0,0]]
+			x: [[3,4,3,4], [3,4,3,4], [3,4,3,4], [3,4,3,4]],
+			y: [[0,0,1,1], [0,0,1,1], [0,0,1,1], [0,0,1,1]]
 		},
 		{	
 			name: "pieceL",
-			x: [[3,4,5,5], [0,0,0,0], [0,0,0,0], [0,0,0,0]],
-			y: [[1,1,1,2], [0,0,0,0], [0,0,0,0], [0,0,0,0]]
+			x: [[3,4,5,5], [4,5,5,5], [3,3,4,5], [4,4,4,5]],
+			y: [[1,1,1,2], [2,0,1,2], [0,1,1,1], [0,1,2,0]]
 		},
 		{	
 			name: "pieceJ",
@@ -82,18 +82,18 @@
 		},
 		{	
 			name: "pieceS",
-			x: [[3,4,4,5], [0,0,0,0], [0,0,0,0], [0,0,0,0]],
-			y: [[1,0,1,0], [0,0,0,0], [0,0,0,0], [0,0,0,0]]
+			x: [[3,4,4,5], [4,4,5,5], [3,4,4,5], [4,4,5,5]],
+			y: [[1,0,1,0], [0,1,1,2], [1,0,1,0], [0,1,1,2]]
 		},
 		{	
 			name: "pieceZ",
-			x: [[3,4,4,5], [0,0,0,0], [0,0,0,0], [0,0,0,0]],
-			y: [[0,1,0,1], [0,0,0,0], [0,0,0,0], [0,0,0,0]]
+			x: [[3,4,4,5], [4,4,5,5], [3,4,4,5], [4,4,5,5]],
+			y: [[0,1,0,1], [1,2,0,1], [0,1,0,1], [1,2,0,1]]
 		},
 		{	
 			name: "pieceT",
-			x: [[3,4,4,5], [0,0,0,0], [0,0,0,0], [0,0,0,0]],
-			y: [[1,0,1,1], [0,0,0,0], [0,0,0,0], [0,0,0,0]]
+			x: [[3,4,4,5], [4,4,4,5], [3,4,4,5], [3,4,4,4]],
+			y: [[1,0,1,1], [0,1,2,1], [0,0,1,0], [1,0,1,2]]
 		}
 	];
 	let random;
@@ -138,19 +138,15 @@
 	const generatePiece = () => {
 		random = randomizer();
 
-		if (state === 4) {
-			state = 0;
-		}
-		// console.log(`${piece[3].name} x:${piece[3].x} y:${piece[3].y}`);
-
 		if (rotate === false) {
 			currentPiece++; // Initialize piece
+			state = 0;
 		}
 		piece.push([]);
 
 		for (let i = 0; i < 4; i++) {
-			let x = pieceType[3].x[state][i];
-			let y = pieceType[3].y[state][i] + yAtRotate;
+			let x = pieceType[random].x[state][i];
+			let y = pieceType[random].y[state][i] + yAtRotate;
 			// console.log(pieceType[random])
 			if (rotate === true) {
 				currentBlock--;
@@ -183,10 +179,9 @@
 		gravity();
 	}
 	const gravity = () => {
-		// console.log(currentBlock, block);
 		if (stopBlock()) {
+			clearLines();
 			generatePiece();
-			console.log(currentPiece);
 		 } else {
 			for (let i = 0; i < 4; i++) {
 				let index = currentBlock - i;
@@ -203,12 +198,10 @@
 			for (let j = 0; j < currentBlock - 4; j++) {
 				if (piece[currentPiece][i].y === block[j].y - 1 &&
 					piece[currentPiece][i].x === block[j].x) {
-					// console.log("Stop!");
 					return true;
 				}
 			}
 			if (piece[currentPiece][i].y === gridHeight - 1) {
-				// console.log("STOP!");
 				return true;
 			}
 		}
@@ -226,13 +219,10 @@
 					if (piece[currentPiece][i].y === block[j].y) {
 						console.log("Bump!");
 						return true;
-						
 					}
 				}
 			}
 			// Checks if block is touching right boundary
-			// console.log(`Current ${i} x:${piece[currentPiece][i].x}`)
-
 			if (keySide === "right" &&
 				piece[currentPiece][i].x === gridWidth-1) {
 				return true;
@@ -247,14 +237,10 @@
 
 	const rotatePiece = () => {
 		// Change current 4 blocks to new state positions
-		
 		let mostRight = findMostRightBlock(); 
-		
 		let yShift = findLowestBlock();
 		let xShift = 0;
 		let xIncr = -3;
-
-		// console.log(block[currentBlock].x)
 
 		if (mostRight === 10) {
 			xShift = 5;
@@ -276,26 +262,19 @@
 			xShift = -3;
 		}
 
-
-
 		if (state > 3) {
 			state = 0;
 		}
 		for (let i = 0; i < 4; i++) {
 			// Access current blocks
 			let index = currentBlock - i;
-			
-			
-			// console.log(pieceType[3].x[state][i]);
-			block[index].x = pieceType[3].x[state][i] + xShift;
-			block[index].y = pieceType[3].y[state][i] + yShift;
 
-			// console.log(`${pieceType[3].y[state][i]} + ${yShift} = ${block[index].y}`);
+			block[index].x = pieceType[random].x[state][i] + xShift;
+			block[index].y = pieceType[random].y[state][i] + yShift;
 
 			$(`.block${index}`).css("left", block[index].x * gridSize);
 			$(`.block${index}`).css("top", block[index].y * gridSize);
 		}
-
 	}
 
 	const movement = () => {
@@ -304,18 +283,18 @@
 		$(document).keypress();
 		$(document).keyup();
 
-		$(document).on("keyup keypress", function(e) {
-			if (e.type === "keyup" && e.key === "s") {
+		$(document).on("keyup keydown", function(e) {
+			if (e.type === "keyup" && e.key === "ArrowDown") {
 				count = 0;
 				clearInterval(timeOut);
 				timeDelay = 1000;
 				timeOut = window.setInterval(startTimer, timeDelay);
 				
-			  } else if (e.type === "keypress") {
-				  	if (e.key === "d") {
+			  } else if (e.type === "keydown") {
+				  	if (e.key === "ArrowRight") {
 				  		// If d is pressed check all blocks are within bounds THEN move
 				  		if (checkBounds("right")) {
-
+				  			// Placeholder
 				  		} else {
 				  			// Move all blocks of current piece right
 				  			for (let i = 0; i < 4; i++) {
@@ -324,10 +303,9 @@
 						  		$(`.block${index}`).css("left", block[index].x * gridSize);
 				  			}
 				  		}
-				  		// console.log(`block #${i} x:${block[i].x}`);
-				  	} else if (e.key === "a") {
+				  	} else if (e.key === "ArrowLeft") {
 		  		  		if (checkBounds("left")) {
-
+		  		  			// Placeholder
 		  		  		} else {
 		  		  			// Move all blocks of current piece right
 		  		  			for (let i = 0; i < 4; i++) {
@@ -336,9 +314,8 @@
 		  				  		$(`.block${index}`).css("left", block[index].x * gridSize);
 		  		  			}
 		  		  		}
-				  		
 				  	}
-				if (e.key === "s") {
+				if (e.key === "ArrowDown") {
 					if (count === 0) {
 						clearInterval(timeOut);
 						timeDelay = 30;
@@ -346,12 +323,10 @@
 					}
 					count++;
 				}
-
-				if (e.key === "w") {
+				if (e.key === "ArrowUp") {
 					state++;
 					rotatePiece();
 				}
-
 				if (e.key === "q") {
 					clearInterval(timeOut);
 				}
@@ -376,17 +351,96 @@
 			let index = currentBlock - i;
 			if (block[index].x > mostRight) {
 				mostRight = block[index].x;
-				console.log(block[index], block[index].x);
 			}
 		}
 		return mostRight;
 	}
 
+	const clearLines = () => {
+
+		// If row is completely filled delete row and move above blocks down
+		// find row
+		let clearCount = [];
+
+		// Initialize clearCount for all rows
+		for (let i = 0; i < gridHeight; i++) {
+			clearCount[i] = 0
+			console.log(clearCount[i]);
+		}
+
+		// Go through everyblock, if there are gridwidth # of blocks in that row then clear
+		
+		console.log("check Clear")
+		for (let i = 0; i <= currentBlock; i++) {
+			// console.log(block[i]);
+			for (let j = 0; j < gridHeight; j++) { // Rows  
+				for (let k = 0; k < gridWidth; k++) { // Columns
+					if (block[i].x === k && block[i].y === j) {
+						clearCount[j]++;
+					}
+				}	
+			}			 
+		}
+		console.log(clearCount);
+
+		for (let i = 0; i <= currentBlock; i++) {
+			// console.log(block[i]);
+			for (let j = 0; j < gridHeight; j++) { // Rows  
+				for (let k = 0; k < gridWidth; k++) { // Columns
+					if (block[i].x === k && block[i].y === j) {
+						if (clearCount[j] === gridWidth) {
+							block[i].x = -10;
+							$(`.block${i}`).css("left", block[i].x * gridSize);
+						}
+					}
+				}	
+			}			 
+		}
+
+		for (let i = 0; i < gridHeight; i++) {
+			if (clearCount[i] === gridWidth) {
+				for (let j = 0; j <= currentBlock; j++) {
+					block[j].y++;
+					$(`.block${j}`).css("top", block[j].y * gridSize);
+				}
+			}
+		}
+
+
+
+		// for (let i = 0; i <= currentBlock; i++) {
+		// 	// console.log(block[i]);
+		// 	 for (let j = 0; j < gridWidth; j++) {
+		// 		if (block[i].x === j && block[i].y === gridHeight - 1) {
+		// 			// console.log(`x:${block[i].x} y:${block[i].y}`);
+		// 			if (clearCount === gridWidth) {
+		// 				console.log("Clear!");
+		// 				block[i].x = -10;
+		// 				$(`.block${i}`).css("left", block[i].x * gridSize);
+		// 			}
+		// 		}
+		// 	}
+		// }
+
+		//  if (clearCount === gridWidth) {
+		//  	for (let i = 0; i <= currentBlock; i++) {
+		//  		block[i].y++;
+		//  		$(`.block${i}`).css("top", block[i].y * gridSize);
+		//  	}
+		//  }
+
+
+		// If there is a block in every spot in a row
+		// for (let j = 0; j < gridWidth; j++) {
+		// 	if (block[0].x === j) {
+		// 		console.log(`x:${block[0].x} y:${block[0].y}`);
+		// 	}
+		// }
+	}
 	generateGrid();
 	generatePiece();
 	movement();
 	
-
 </script>
 
 </html>
