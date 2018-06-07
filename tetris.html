@@ -10,7 +10,8 @@
 		h2 {
 			color: white;
 			position: absolute;
-			right: 0;
+			right: 10px;
+			font-family: sans-serif;
 		}
 		.x {
 			top: 0;
@@ -49,9 +50,9 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 
 <script>
-	const gridSize = 20;
-	const gridWidth = 11
-	const gridHeight = 30;
+	const gridSize = 30;
+	const gridWidth = 10;
+	const gridHeight = 20;
 	const grid = [];
 
 	const block = [];
@@ -63,43 +64,51 @@
 		{
 			name: "pieceI",
 			x: [[3,4,5,6], [5,5,5,5], [3,4,5,6], [3,3,3,3]],
-			y: [[0,0,0,0], [0,1,2,3], [0,0,0,0], [0,1,2,3]]
+			y: [[0,0,0,0], [0,1,2,3], [0,0,0,0], [0,1,2,3]],
+			colour: "#00e2ff"
 		},
 		{	
 			name: "pieceO",
 			x: [[3,4,3,4], [3,4,3,4], [3,4,3,4], [3,4,3,4]],
-			y: [[0,0,1,1], [0,0,1,1], [0,0,1,1], [0,0,1,1]]
+			y: [[0,0,1,1], [0,0,1,1], [0,0,1,1], [0,0,1,1]],
+			colour: "#fbff00"
 		},
 		{	
 			name: "pieceL",
 			x: [[3,4,5,5], [4,5,5,5], [3,3,4,5], [4,4,4,5]],
-			y: [[1,1,1,2], [2,0,1,2], [0,1,1,1], [0,1,2,0]]
+			y: [[1,1,1,2], [2,0,1,2], [0,1,1,1], [0,1,2,0]],
+			colour: "#ff5200"
 		},
 		{	
 			name: "pieceJ",
 			x: [[3,3,4,5], [4,4,4,5], [3,4,5,5], [3,4,4,4]], 
-			y: [[0,1,1,1], [0,1,2,0], [0,0,0,1], [2,0,1,2]]
+			y: [[0,1,1,1], [0,1,2,0], [0,0,0,1], [2,0,1,2]],
+			colour: "#f39f21"
 		},
 		{	
 			name: "pieceS",
 			x: [[3,4,4,5], [4,4,5,5], [3,4,4,5], [4,4,5,5]],
-			y: [[1,0,1,0], [0,1,1,2], [1,0,1,0], [0,1,1,2]]
+			y: [[1,0,1,0], [0,1,1,2], [1,0,1,0], [0,1,1,2]],
+			colour: "#f32121"
 		},
 		{	
 			name: "pieceZ",
 			x: [[3,4,4,5], [4,4,5,5], [3,4,4,5], [4,4,5,5]],
-			y: [[0,1,0,1], [1,2,0,1], [0,1,0,1], [1,2,0,1]]
+			y: [[0,1,0,1], [1,2,0,1], [0,1,0,1], [1,2,0,1]],
+			colour: "#26f500"
 		},
 		{	
 			name: "pieceT",
 			x: [[3,4,4,5], [4,4,4,5], [3,4,4,5], [3,4,4,4]],
-			y: [[1,0,1,1], [0,1,2,1], [0,0,1,0], [1,0,1,2]]
+			y: [[1,0,1,1], [0,1,2,1], [0,0,1,0], [1,0,1,2]],
+			colour: "#9d00ff"
 		}
 	];
 	let random;
 	let state = 0; // For rotation states 0 - 3
-	let rotate = false;
 	let yAtRotate = 0;
+	let score = 0;
+	$("body").append(`<h2>Score:${score}</h2>`);
 
 	let timeDelay = 1000;
 	let timeOut = window.setInterval(startTimer, timeDelay);
@@ -138,21 +147,17 @@
 	const generatePiece = () => {
 		random = randomizer();
 
-		if (rotate === false) {
-			currentPiece++; // Initialize piece
-			state = 0;
-		}
+		currentPiece++; // Initialize piece
+		state = 0;
+
 		piece.push([]);
 
 		for (let i = 0; i < 4; i++) {
 			let x = pieceType[random].x[state][i];
 			let y = pieceType[random].y[state][i] + yAtRotate;
 			// console.log(pieceType[random])
-			if (rotate === true) {
-				currentBlock--;
-			} else {
-				currentBlock++;
-			}
+
+			currentBlock++;
 
 			generateBlock(x, y);
 			piece[currentPiece].push(block[currentBlock]);
@@ -170,9 +175,11 @@
 
 		$(`.block${currentBlock}`).css("left", eachBlock.x * gridSize);
 		$(`.block${currentBlock}`).css("top", eachBlock.y * gridSize);
+		$(`.block${currentBlock}`).css("background", pieceType[random].colour);
 
-		$(".block").css("height", gridSize);
-		$(".block").css("width", gridSize);
+		$(".block").css("height", gridSize-1);
+		$(".block").css("width", gridSize-1);
+		
 	}
 
 	function startTimer() {
@@ -185,7 +192,7 @@
 		 } else {
 			for (let i = 0; i < 4; i++) {
 				let index = currentBlock - i;
-				block[index].y++;			
+				block[index].y++;
 				$(`.block${index}`).css("top", block[index].y * gridSize); // Draws block
 			}
 		}
@@ -195,7 +202,7 @@
 		for (let i = 0; i < 4; i++) {
 			// Check 4 current blocks against all previous blocks
 			// Stops if there is a block below it
-			for (let j = 0; j < currentBlock - 4; j++) {
+			for (let j = 0; j <= currentBlock - 4; j++) {
 				if (piece[currentPiece][i].y === block[j].y - 1 &&
 					piece[currentPiece][i].x === block[j].x) {
 					return true;
@@ -365,12 +372,9 @@
 		// Initialize clearCount for all rows
 		for (let i = 0; i < gridHeight; i++) {
 			clearCount[i] = 0
-			console.log(clearCount[i]);
 		}
 
 		// Go through everyblock, if there are gridwidth # of blocks in that row then clear
-		
-		console.log("check Clear")
 		for (let i = 0; i <= currentBlock; i++) {
 			// console.log(block[i]);
 			for (let j = 0; j < gridHeight; j++) { // Rows  
@@ -381,7 +385,6 @@
 				}	
 			}			 
 		}
-		console.log(clearCount);
 
 		for (let i = 0; i <= currentBlock; i++) {
 			// console.log(block[i]);
@@ -389,6 +392,7 @@
 				for (let k = 0; k < gridWidth; k++) { // Columns
 					if (block[i].x === k && block[i].y === j) {
 						if (clearCount[j] === gridWidth) {
+							score += 100
 							block[i].x = -10;
 							$(`.block${i}`).css("left", block[i].x * gridSize);
 						}
@@ -396,51 +400,24 @@
 				}	
 			}			 
 		}
-
+		$("h2").text(`Score:${score}`);
+		// Move all lines above the cleared line down
 		for (let i = 0; i < gridHeight; i++) {
 			if (clearCount[i] === gridWidth) {
 				for (let j = 0; j <= currentBlock; j++) {
-					block[j].y++;
-					$(`.block${j}`).css("top", block[j].y * gridSize);
+					if (block[j].y < i) {
+						block[j].y++;
+						$(`.block${j}`).css("top", block[j].y * gridSize);
+					}
 				}
 			}
 		}
-
-
-
-		// for (let i = 0; i <= currentBlock; i++) {
-		// 	// console.log(block[i]);
-		// 	 for (let j = 0; j < gridWidth; j++) {
-		// 		if (block[i].x === j && block[i].y === gridHeight - 1) {
-		// 			// console.log(`x:${block[i].x} y:${block[i].y}`);
-		// 			if (clearCount === gridWidth) {
-		// 				console.log("Clear!");
-		// 				block[i].x = -10;
-		// 				$(`.block${i}`).css("left", block[i].x * gridSize);
-		// 			}
-		// 		}
-		// 	}
-		// }
-
-		//  if (clearCount === gridWidth) {
-		//  	for (let i = 0; i <= currentBlock; i++) {
-		//  		block[i].y++;
-		//  		$(`.block${i}`).css("top", block[i].y * gridSize);
-		//  	}
-		//  }
-
-
-		// If there is a block in every spot in a row
-		// for (let j = 0; j < gridWidth; j++) {
-		// 	if (block[0].x === j) {
-		// 		console.log(`x:${block[0].x} y:${block[0].y}`);
-		// 	}
-		// }
 	}
+
 	generateGrid();
 	generatePiece();
 	movement();
 	
 </script>
 
-</html>
+</html>q
