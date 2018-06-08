@@ -10,8 +10,11 @@
 		h2 {
 			color: white;
 			position: absolute;
-			right: 10px;
+			left: 10px;
 			font-family: sans-serif;
+		}
+		span {
+			margin: 0;
 		}
 		.x {
 			top: 0;
@@ -20,15 +23,9 @@
 			top: 30px;
 		}
 		.grid {
-			display: block;
-			height: 20px;
-			width: 20px;
+			/*display: inline-block;*/
 			border: 1px solid gray;
 			position: absolute;
-			top: auto;
-			left: auto;
-			right: auto;
-			bottom: auto;
 		}
 		.block {
 			display: block;
@@ -42,6 +39,13 @@
 			right: auto;
 			bottom: auto;
 		}
+		.preview {
+			height: 70px;
+			width: 70px;
+			border: 1px solid white;
+			position: absolute;
+			top: 0;
+		}
 	</style>
 </head>
 <body>
@@ -50,10 +54,12 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 
 <script>
+	const winWidth = $(window).width();
 	const gridSize = 30;
 	const gridWidth = 10;
 	const gridHeight = 20;
 	const grid = [];
+	const centerX = winWidth/2 - (gridWidth/2) * gridSize;
 
 	const block = [];
 	let currentBlock = -1;
@@ -75,15 +81,15 @@
 		},
 		{	
 			name: "pieceL",
-			x: [[3,4,5,5], [4,5,5,5], [3,3,4,5], [4,4,4,5]],
-			y: [[1,1,1,2], [2,0,1,2], [0,1,1,1], [0,1,2,0]],
-			colour: "#ff5200"
+			x: [[3,3,4,5], [4,5,5,5], [3,4,5,5], [3,3,3,4]],
+			y: [[1,2,1,1], [0,0,1,2], [1,1,0,1], [0,1,2,2]],
+			colour: "#f39f21"
 		},
 		{	
 			name: "pieceJ",
 			x: [[3,3,4,5], [4,4,4,5], [3,4,5,5], [3,4,4,4]], 
 			y: [[0,1,1,1], [0,1,2,0], [0,0,0,1], [2,0,1,2]],
-			colour: "#f39f21"
+			colour: "#213bf3"
 		},
 		{	
 			name: "pieceS",
@@ -121,14 +127,18 @@
 
 		for (let i = 0; i < gridArea; i++) {
 			let eachGrid = {};
+			// Centering
+			let gridShiftX = col * gridSize + centerX;
+			let gridShiftY = row * gridSize;
+
 			eachGrid.x = col;
 			eachGrid.y = row;
 			
 			grid[i] = eachGrid;
 
 			$("body").append(`<span class="grid grid${i}"></span>`);
-			$(`.grid${i}`).css("left", col * gridSize);
-			$(`.grid${i}`).css("top", row * gridSize);
+			$(`.grid${i}`).css("left", gridShiftX);
+			$(`.grid${i}`).css("top", gridShiftY);
 
 			col++;
 
@@ -145,10 +155,17 @@
 		return randomNum;
 	}
 	const generatePiece = () => {
-		random = randomizer();
-
+		if (currentPiece === -1) {
+			random = randomizer();	
+		} else {
+			random = randomNext;
+		}
+		
 		currentPiece++; // Initialize piece
 		state = 0;
+
+		randomNext = randomizer();
+		previewNext(randomNext);
 
 		piece.push([]);
 
@@ -162,6 +179,7 @@
 			generateBlock(x, y);
 			piece[currentPiece].push(block[currentBlock]);
 		}
+		
 	}
 	const generateBlock = (xPos, yPos) => {
 		// console.log("generate new block");
@@ -173,12 +191,12 @@
 
 		$("body").append(`<span class="block block${currentBlock}"></span>`);
 
-		$(`.block${currentBlock}`).css("left", eachBlock.x * gridSize);
+		$(`.block${currentBlock}`).css("left", eachBlock.x * gridSize + centerX);
 		$(`.block${currentBlock}`).css("top", eachBlock.y * gridSize);
 		$(`.block${currentBlock}`).css("background", pieceType[random].colour);
 
-		$(".block").css("height", gridSize-1);
-		$(".block").css("width", gridSize-1);
+		$(".block").css("height", gridSize);
+		$(".block").css("width", gridSize);
 		
 	}
 
@@ -224,7 +242,6 @@
 				if (piece[currentPiece][i].x === block[j].x - 1 || 
 					piece[currentPiece][i].x === block[j].x + 1) {
 					if (piece[currentPiece][i].y === block[j].y) {
-						console.log("Bump!");
 						return true;
 					}
 				}
@@ -233,10 +250,8 @@
 			if (keySide === "right" &&
 				piece[currentPiece][i].x === gridWidth-1) {
 				return true;
-				console.log("Bump! right");				
 			} else if (keySide === "left" && 
 				piece[currentPiece][i].x === 0){
-				console.log("Bump! left");		
 				return true;
 			}
 		}
@@ -279,7 +294,7 @@
 			block[index].x = pieceType[random].x[state][i] + xShift;
 			block[index].y = pieceType[random].y[state][i] + yShift;
 
-			$(`.block${index}`).css("left", block[index].x * gridSize);
+			$(`.block${index}`).css("left", block[index].x * gridSize + centerX);
 			$(`.block${index}`).css("top", block[index].y * gridSize);
 		}
 	}
@@ -307,7 +322,7 @@
 				  			for (let i = 0; i < 4; i++) {
 				  				let index = currentBlock - i;
 						  		block[index].x ++;
-						  		$(`.block${index}`).css("left", block[index].x * gridSize);
+						  		$(`.block${index}`).css("left", block[index].x * gridSize + centerX);
 				  			}
 				  		}
 				  	} else if (e.key === "ArrowLeft") {
@@ -318,7 +333,7 @@
 		  		  			for (let i = 0; i < 4; i++) {
 		  		  				let index = currentBlock - i;
 		  				  		block[index].x --;
-		  				  		$(`.block${index}`).css("left", block[index].x * gridSize);
+		  				  		$(`.block${index}`).css("left", block[index].x * gridSize + centerX);
 		  		  			}
 		  		  		}
 				  	}
@@ -393,14 +408,14 @@
 					if (block[i].x === k && block[i].y === j) {
 						if (clearCount[j] === gridWidth) {
 							score += 100
-							block[i].x = -10;
-							$(`.block${i}`).css("left", block[i].x * gridSize);
+							block[i].x = -1000;
+							$(`.block${i}`).css("left", block[i].x * gridSize + centerX);
 						}
 					}
 				}	
 			}			 
 		}
-		$("h2").text(`Score:${score}`);
+		$("h2").text(`Score: ${score}`);
 		// Move all lines above the cleared line down
 		for (let i = 0; i < gridHeight; i++) {
 			if (clearCount[i] === gridWidth) {
@@ -414,10 +429,37 @@
 		}
 	}
 
+	const previewNext = (nextPiece) => {
+		const previewPos = centerX + (gridWidth * gridSize) + gridSize;
+
+		$("body").append(`<span class ="preview"></span>`);
+		$(".preview").css("width", gridSize * 5);
+		$(".preview").css("height", gridSize * 5);
+		$(".preview").css("left", previewPos);
+
+		for (let i = 0; i < 4; i++) {
+			let x = pieceType[nextPiece].x[state][i];
+			let y = pieceType[nextPiece].y[state][i] + yAtRotate;
+			// console.log(pieceType[random])
+
+			let eachBlock = {};
+			eachBlock.x = x - 2;
+			eachBlock.y = y + 1;
+
+			$("body").append(`<span class="block previewBlock${i}"></span>`);
+
+			$(`.previewBlock${i}`).css("left", eachBlock.x * gridSize + previewPos);
+			$(`.previewBlock${i}`).css("top", eachBlock.y * gridSize);
+			$(`.previewBlock${i}`).css("background", pieceType[nextPiece].colour);
+		}
+		return (nextPiece);
+	}
+
 	generateGrid();
 	generatePiece();
+	
 	movement();
 	
 </script>
 
-</html>q
+</html>
