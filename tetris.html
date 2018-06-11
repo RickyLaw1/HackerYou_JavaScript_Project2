@@ -3,29 +3,70 @@
 <head>
 	<meta charset="UTF-8">
 	<title>stuf</title>
+	<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
 	<style>
 		body {
 			background: #000;
+			font-family: 'Roboto', sans-serif;
 		}
 		h2 {
 			color: white;
 			position: absolute;
 			left: 10px;
-			font-family: sans-serif;
+		}
+		h4 {
+			color: white;
+			text-align: center;
+			margin: 0;
+			padding: 5px 2px;
+			font-size: 14px;
+			font-weight: 400;
+		}
+		button {
+			position: relative;
+			top: 75%;
+			color: white;
+			font-size: 50px;
+			background: transparent;
+			border: 10px solid white;
+			padding: 15px;
+		}
+		button:hover {
+			background: white;
+			color: darkcyan;
 		}
 		span {
 			margin: 0;
 		}
-		.x {
-			top: 0;
+		i {
+			color: white;
+			font-size: 30px;
+			display: block;
 		}
-		.y {
-			top: 30px;
+		.start {
+			position: absolute;
+			top: 0;
+			z-index: 10;
+			text-align: center;
+			background: darkcyan;
 		}
 		.grid {
 			/*display: inline-block;*/
 			border: 1px solid gray;
 			position: absolute;
+		}
+		.score {
+			display: none;
+			text-transform: uppercase;
+			transform: translateX(-150%);
+		}
+		.controls {
+			position: absolute;
+			width: 60px;
+			height: 60px;
+			border: 10px solid white;
+			display: none;
 		}
 		.block {
 			display: block;
@@ -37,14 +78,14 @@
 			top: 0;
 			left: 0;
 			right: auto;
-			bottom: auto;
+			bottom: auto;q
 		}
 		.preview {
 			height: 70px;
 			width: 70px;
-			border: 1px solid white;
 			position: absolute;
 			top: 0;
+			display: none;
 		}
 	</style>
 </head>
@@ -114,10 +155,47 @@
 	let state = 0; // For rotation states 0 - 3
 	let yAtRotate = 0;
 	let score = 0;
-	$("body").append(`<h2>Score:${score}</h2>`);
+	$("body").append(`<h2 class="score">Score: ${score}</h2>`);
+	$(".score").css("left", centerX);
 
-	let timeDelay = 1000;
+	let timeDelay = 1500;
 	let timeOut = window.setInterval(startTimer, timeDelay);
+	let startGame = false;
+
+	const startMenu = () => {
+		$("body").append("<span class='start'><button>START</button></span>");
+		$(".start").css("left", centerX);
+		$(".start").css("height", gridHeight * gridSize + 2);
+		$(".start").css("width", gridWidth * gridSize + 2);
+		$("button").on("click", function() {
+			startGame = true;
+			$(".start").css("display", "none");
+			$(".preview").css("display", "block");
+			$(".score").css("display", "block");
+			$(".controls").css("display", "block");
+			generateGrid();
+			generatePiece();
+			movement();
+
+		});
+		// startGame = true;
+	}
+	const controls = () => {
+		$("body").append(`<span class='controls controlUp'><h4><i class="fas fa-arrow-up"></i>ROTATE</h4></span>`);
+		$("body").append(`<span class='controls controlLeft'><h4><i class="fas fa-arrow-left"></i>LEFT</h4></span>`);
+		$("body").append(`<span class='controls controlDown'><h4><i class="fas fa-arrow-down"></i>DROP</h4></span>`);
+		$("body").append(`<span class='controls controlRight'><h4><i class="fas fa-arrow-right"></i>RIGHT</h4></span>`);
+
+		$(".controlUp").css("left", centerX + 115);
+		$(".controlUp").css("top", gridHeight * gridSize + 45);
+		$(".controlLeft").css("left", centerX + 10);
+		$(".controlLeft").css("top", gridHeight * gridSize + 150);
+		$(".controlDown").css("left", centerX + 115);
+		$(".controlDown").css("top", gridHeight * gridSize + 150);
+		$(".controlRight").css("left", centerX + 220);
+		$(".controlRight").css("top", gridHeight * gridSize + 150);
+	}
+	controls();
 
 	const generateGrid = () => {
 		const gridArea = gridHeight * gridWidth;
@@ -201,10 +279,13 @@
 	}
 
 	function startTimer() {
-		gravity();
+		if (startGame === true) {
+			gravity();
+		}
 	}
 	const gravity = () => {
 		if (stopBlock()) {
+			score+= 10;
 			clearLines();
 			generatePiece();
 		 } else {
@@ -306,6 +387,9 @@
 		$(document).keyup();
 
 		$(document).on("keyup keydown", function(e) {
+			if(e.type === "keyup") {
+				$(".controls").css("background","transparent");
+			}
 			if (e.type === "keyup" && e.key === "ArrowDown") {
 				count = 0;
 				clearInterval(timeOut);
@@ -315,6 +399,7 @@
 			  } else if (e.type === "keydown") {
 				  	if (e.key === "ArrowRight") {
 				  		// If d is pressed check all blocks are within bounds THEN move
+				  		$(".controlRight").css("background","darkCyan");
 				  		if (checkBounds("right")) {
 				  			// Placeholder
 				  		} else {
@@ -326,6 +411,7 @@
 				  			}
 				  		}
 				  	} else if (e.key === "ArrowLeft") {
+				  		$(".controlLeft").css("background","darkCyan");
 		  		  		if (checkBounds("left")) {
 		  		  			// Placeholder
 		  		  		} else {
@@ -342,10 +428,12 @@
 						clearInterval(timeOut);
 						timeDelay = 30;
 						timeOut = window.setInterval(startTimer, timeDelay);
+						$(".controlDown").css("background","darkCyan");
 					}
 					count++;
 				}
 				if (e.key === "ArrowUp") {
+					$(".controlUp").css("background","darkCyan");
 					state++;
 					rotatePiece();
 				}
@@ -415,7 +503,7 @@
 				}	
 			}			 
 		}
-		$("h2").text(`Score: ${score}`);
+		$("h2").text(`SCORE: ${score}`);
 		// Move all lines above the cleared line down
 		for (let i = 0; i < gridHeight; i++) {
 			if (clearCount[i] === gridWidth) {
@@ -455,11 +543,8 @@
 		return (nextPiece);
 	}
 
-	generateGrid();
-	generatePiece();
-	
-	movement();
-	
+	startMenu();
+
 </script>
 
 </html>
